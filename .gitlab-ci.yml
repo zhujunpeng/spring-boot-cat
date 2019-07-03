@@ -1,0 +1,21 @@
+before_script:
+  - rm -rf /data/cat_demo
+  - mkdir -p /data/cat_demo
+  - mv * .git* .mvn /data/cat_demo/
+  - cd /data/cat_demo
+
+stages:
+  - deploy
+
+maven-build:
+  stage: deploy
+  only:
+    - master
+  script:
+    - mvn package -B -Dmaven.test.skip=true
+    - docker build -t $CI_PROJECT_NAME:$CI_COMMIT_REF_NAME .
+    - docker tag $CI_PROJECT_NAME:$CI_COMMIT_REF_NAME registry.ijovo.com/ijovo/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME
+    - docker push registry.ijovo.com/ijovo/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME
+#    - curl 'http://47.106.148.202/api.php?pod=user-service&ns=default&rs=registry.ijovo.com/ijovo/user-service:master'
+  tags:
+    - spring-boot-shell
